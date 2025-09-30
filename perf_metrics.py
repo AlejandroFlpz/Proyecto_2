@@ -49,3 +49,12 @@ def calmar_ratio(port_value: pd.Series) -> float:
 
     return calmar
 
+def win_rate(port_value: pd.Series) -> float:
+    ret = port_value.pct_change().dropna()
+    wins = (ret > 0).sum()
+    total = len(ret)
+
+    if total > 0:
+        return wins / total
+    else:
+        return 0.0
