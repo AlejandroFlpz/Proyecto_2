@@ -19,8 +19,8 @@ def ratio_de_sharpe(port_value: pd.Series) -> float:
 def max_drawdown(port_value: pd.Series) -> float:
     rolling_max = port_value.cummax()
     drawdown = (rolling_max - port_value) / rolling_max
-    max_drawd = drawdown.max()
-    return max_drawd
+    max_drawdwn = drawdown.max()
+    return max_drawdwn
 
 def sorting_ratio(port_value: pd.Series) -> float:
     ret = port_value.pct_change().dropna()
@@ -31,11 +31,11 @@ def sorting_ratio(port_value: pd.Series) -> float:
     annual_down_risk = down_risk * np.sqrt(365*24)
 
     if annual_down_risk > 0:
-        sortino_ratio = annual_mean / annual_down_risk
+        sortino = annual_mean / annual_down_risk
     else:
-        sortino_ratio = 0
+        sortino = 0
 
-    return sortino_ratio
+    return sortino
 
 def calmar_ratio(port_value: pd.Series) -> float:
     ret_mean = port_value.pct_change().dropna().mean()
@@ -43,9 +43,9 @@ def calmar_ratio(port_value: pd.Series) -> float:
     max_drawd = max_drawdown(port_value)
 
     if max_drawd > 0:
-        calmar_ratio = annual_mean / max_drawd
+        calmar = annual_mean / max_drawd
     else:
-        calmar_ratio = 0
+        calmar = 0
 
-    return calmar_ratio
+    return calmar
 
