@@ -18,20 +18,20 @@ def ratio_de_sharpe(port_value: pd.Series) -> float:
 
 def max_drawdown(port_value: pd.Series) -> float:
     rolling_max = port_value.cummax()
-    drawdown = (rolling_max - port_value) / rolling_max
-    max_drawdwn = drawdown.max()
+    drawdown = (port_value - rolling_max) / rolling_max
+    max_drawdwn = drawdown.min()
     return max_drawdwn
 
-def sorting_ratio(port_value: pd.Series) -> float:
+def sortino_ratio(port_value: pd.Series) -> float:
     ret = port_value.pct_change().dropna()
     ret_mean = ret.mean()
-    down_risk = np.minimum(ret, 0)
+    downside_vol = np.minimum(ret, 0)
 
     annual_mean = ret_mean * 365*24
-    annual_down_risk = down_risk * np.sqrt(365*24)
+    annual_downside_vol = downside_vol * np.sqrt(365*24)
 
-    if annual_down_risk > 0:
-        sortino = annual_mean / annual_down_risk
+    if annual_downside_vol > 0:
+        sortino = annual_mean / annual_downside_vol
     else:
         sortino = 0
 
@@ -48,13 +48,3 @@ def calmar_ratio(port_value: pd.Series) -> float:
         calmar = 0
 
     return calmar
-
-def win_rate(port_value: pd.Series) -> float:
-    ret = port_value.pct_change().dropna()
-    wins = (ret > 0).sum()
-    total = len(ret)
-
-    if total > 0:
-        return wins / total
-    else:
-        return 0.0
