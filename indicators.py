@@ -32,3 +32,4 @@ def bollinger_bands(data: pd.DataFrame, window: int, window_dev: float) -> tuple
     sell_signal_bb = data.Close > bb_high
 
     return buy_signal_bb, sell_signal_bb
+

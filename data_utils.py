@@ -3,6 +3,7 @@ import pandas as pd
 
 def datos(csv: str) -> pd.DataFrame:
     data = pd.read_csv(csv).dropna()
+    data = data.copy()
     data = data.rename(columns={'Date': 'Datetime'})
     data['Datetime'] = pd.to_datetime(data['Datetime'], errors='coerce', dayfirst=True)
     data = data.iloc[::-1].reset_index(drop=True)

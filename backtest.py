@@ -1,5 +1,6 @@
 import pandas as pd
 import ta
+import numpy as np
 
 from models import Operation
 from port_value import get_portfolio_value
@@ -8,12 +9,12 @@ from perf_metrics import ratio_de_sharpe, max_drawdown, sortino_ratio, calmar_ra
 
 
 def backtest_opt(data, trail) -> float:
-    data = data.copy()
+    
 
     # Params
     stop_loss = trail.suggest_float('stop_loss', 0.01, 0.12)
     take_profit = trail.suggest_float('take_profit', 0.01, 0.15)
-    n_shares = trail.suggest_int('n_shares', 0, 10)
+    n_shares = trail.suggest_int('n_shares', 0, 5)
 
     # RSI
     rsi_window = trail.suggest_int('rsi_window', 5, 60)
@@ -33,9 +34,11 @@ def backtest_opt(data, trail) -> float:
     bb_buy, bb_sell = bollinger_bands(data, bb_window, bb_window_dev)
 
     # Buy or sell signals
-    historic = data.dropna().copy()
+    historic = data.copy()
+    historic = historic.dropna()
     buy_signals = rsi_buy.astype(int) + macd_buy.astype(int) + bb_buy.astype(int)
     sell_signals = rsi_sell.astype(int) + macd_sell.astype(int) + bb_sell.astype(int)
+
     historic['buy_signal'] = buy_signals >= 2
     historic['sell_signal'] = sell_signals >= 2
 
@@ -47,9 +50,10 @@ def backtest_opt(data, trail) -> float:
 
     active_long_positions: list[Operation] = []
     active_short_positions: list[Operation] = []
-    port_value = [cash]
 
-    for _, row in historic.iterrows():
+    port_value = []
+
+    for i, row in historic.iterrows():
 
         # Close LONG positions
         for position in active_long_positions.copy():
@@ -60,13 +64,13 @@ def backtest_opt(data, trail) -> float:
         # Close SHORT positions
         for position in active_short_positions.copy():
             if row.Close < position.take_profit or row.Close > position.stop_loss:
-                cash -= row.Close * position.n_shares * (1 + COM)
-                pnl = (position.price - row.Close) * position.n_shares
-                cash += pnl
+                pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+                cash += (position.price * position.n_shares * (1 + COM)) + pnl
                 active_short_positions.remove(position)
 
+
         # Long signal
-        if row.buy_signal and cash >= row.Close * n_shares * (1 + COM):
+        if row.buy_signal and cash > row.Close * n_shares * (1 + COM):
             cash -= row.Close * n_shares * (1 + COM)
             active_long_positions.append(
                 Operation(
@@ -80,7 +84,7 @@ def backtest_opt(data, trail) -> float:
             )
 
         # Short signal
-        if row.sell_signal and cash >= row.Close * n_shares * (1 + COM):
+        if row.sell_signal and cash > row.Close * n_shares * (1 + COM):
             cash -= row.Close * n_shares * (1 + COM)
             active_short_positions.append(
                 Operation(
@@ -93,41 +97,35 @@ def backtest_opt(data, trail) -> float:
                 )
             )
 
-        # Valor del portafolio
-        port_value.append(
-            get_portfolio_value(
-                cash,
-                active_long_positions,
-                active_short_positions,
-                row.Close,
-                n_shares,
-                COM
-            )
-        )
+        
+        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close,n_shares, COM))
 
-    # Cierre final LONG
+    # Close Long positions at the end
     for position in active_long_positions:
         cash += row.Close * position.n_shares * (1 - COM)
 
-    # Cierre final SHORT
+    # Close Short positions at the end
     for position in active_short_positions:
-        cash -= row.Close * position.n_shares * (1 + COM)
-        pnl = (position.price - row.Close) * position.n_shares
-        cash += pnl
+        pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+        cash += (position.price * position.n_shares * (1 + COM)) + pnl
 
-    # Reset
+    
     active_long_positions = []
     active_short_positions = []
 
     # Calmar Ratio
-    calmar_df = pd.DataFrame({'port_value': port_value})
+    calmar_df = pd.DataFrame(
+        {'port_value': port_value
+    })
+
     calmar = calmar_ratio(calmar_df.port_value)
 
     return calmar
 
 
 
-def backtest(data: pd.DataFrame, params: dict) -> float:
+
+def backtest_values(data: pd.DataFrame, params: dict) -> float:
     data = data.copy()
 
     # Params from Optuna
@@ -155,6 +153,7 @@ def backtest(data: pd.DataFrame, params: dict) -> float:
     historic = data.dropna().copy()
     buy_signals = rsi_buy.astype(int) + macd_buy.astype(int) + bb_buy.astype(int)
     sell_signals = rsi_sell.astype(int) + macd_sell.astype(int) + bb_sell.astype(int)
+
     historic["buy_signal"] = buy_signals >= 2
     historic["sell_signal"] = sell_signals >= 2
 
@@ -165,10 +164,12 @@ def backtest(data: pd.DataFrame, params: dict) -> float:
 
     active_long_positions: list[Operation] = []
     active_short_positions: list[Operation] = []
-    port_value = [cash]
+
+    port_value = []
 
     
-    for _, row in historic.iterrows():
+    for i, row in historic.iterrows():
+
         # Close LONG positions
         for position in active_long_positions.copy():
             if row.Close > position.take_profit or row.Close < position.stop_loss:
@@ -178,13 +179,13 @@ def backtest(data: pd.DataFrame, params: dict) -> float:
         # Close SHORT positions
         for position in active_short_positions.copy():
             if row.Close < position.take_profit or row.Close > position.stop_loss:
-                cash -= row.Close * position.n_shares * (1 + COM)
-                pnl = (position.price - row.Close) * position.n_shares
-                cash += pnl
+                pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+                cash += (position.price * position.n_shares * (1 + COM)) + pnl
                 active_short_positions.remove(position)
 
+
         # Long signal
-        if row.buy_signal and cash >= row.Close * n_shares * (1 + COM):
+        if row.buy_signal and cash > row.Close * n_shares * (1 + COM):
             cash -= row.Close * n_shares * (1 + COM)
             active_long_positions.append(
                 Operation(
@@ -193,12 +194,12 @@ def backtest(data: pd.DataFrame, params: dict) -> float:
                     stop_loss=row.Close * (1 - SL),
                     take_profit=row.Close * (1 + TP),
                     n_shares=n_shares,
-                    type="LONG",
+                    type='LONG'
                 )
             )
 
         # Short signal
-        if row.sell_signal and cash >= row.Close * n_shares * (1 + COM):
+        if row.sell_signal and cash > row.Close * n_shares * (1 + COM):
             cash -= row.Close * n_shares * (1 + COM)
             active_short_positions.append(
                 Operation(
@@ -207,25 +208,21 @@ def backtest(data: pd.DataFrame, params: dict) -> float:
                     stop_loss=row.Close * (1 + SL),
                     take_profit=row.Close * (1 - TP),
                     n_shares=n_shares,
-                    type="SHORT",
+                    type='SHORT'
                 )
             )
 
-        port_value.append( get_portfolio_value(cash, active_long_positions, active_short_positions, row.Close, n_shares, COM))
+        
+        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close,n_shares, COM))
 
-    # Close long positions at the end
+    # Close Long positions at the end
     for position in active_long_positions:
         cash += row.Close * position.n_shares * (1 - COM)
-        
-    # Close short positions at the end
+
+    # Close Short positions at the end
     for position in active_short_positions:
-        cash -= row.Close * position.n_shares * (1 + COM)
-        pnl = (position.price - row.Close) * position.n_shares
-        cash += pnl
+        pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+        cash += (position.price * position.n_shares * (1 + COM)) + pnl
 
-    # Final metric
-    calmar_df = pd.DataFrame({"port_value": port_value})
-    calmar = calmar_ratio(calmar_df.port_value)
-
-    return calmar
-
+    
+    return port_value, cash

@@ -4,12 +4,15 @@ def get_portfolio_value(cash: float, long_ops: list[Operation], short_ops: list[
     val = cash
 
     # add long positions value
-    val += len(long_ops) * n_shares * current_price
+    for position in long_ops:
+        val += current_price * position.n_shares * (1 - COM)
 
     # add short positions value
     
     for position in short_ops:
-        p_l += (position.price - current_price) * position.n_shares * (1-COM)
-        val += p_l
+        pnl = (position.price - current_price) * position.n_shares * (1 - COM)
+        val += ((position.price * position.n_shares * (1 + COM)) + pnl)
 
     return val
+
+

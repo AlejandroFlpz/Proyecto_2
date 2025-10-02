@@ -20,12 +20,12 @@ def max_drawdown(port_value: pd.Series) -> float:
     rolling_max = port_value.cummax()
     drawdown = (port_value - rolling_max) / rolling_max
     max_drawdwn = drawdown.min()
-    return max_drawdwn
+    return abs(max_drawdwn)
 
 def sortino_ratio(port_value: pd.Series) -> float:
     ret = port_value.pct_change().dropna()
     ret_mean = ret.mean()
-    downside_vol = np.minimum(ret, 0)
+    downside_vol = np.minimum(ret, 0).std()
 
     annual_mean = ret_mean * 365*24
     annual_downside_vol = downside_vol * np.sqrt(365*24)
@@ -48,3 +48,4 @@ def calmar_ratio(port_value: pd.Series) -> float:
         calmar = 0
 
     return calmar
+
