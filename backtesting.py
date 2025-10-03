@@ -1,41 +1,41 @@
 import pandas as pd
 import ta
 import numpy as np
+from sklearn.model_selection import TimeSeriesSplit
 
 from models import Operation
 from port_value import get_portfolio_value
 from indicators import rsi, macd, bollinger_bands
-from perf_metrics import ratio_de_sharpe, max_drawdown, sortino_ratio, calmar_ratio
+from perf_metrics import calmar_ratio
 
 
-def backtest_opt(data, trail) -> float:
+def backtest_opt(data, trial) -> float:
     
 
     # Params
-    stop_loss = trail.suggest_float('stop_loss', 0.01, 0.12)
-    take_profit = trail.suggest_float('take_profit', 0.01, 0.15)
-    n_shares = trail.suggest_int('n_shares', 0, 5)
+    stop_loss = trial.suggest_float('stop_loss', 0.01, 0.12)
+    take_profit = trial.suggest_float('take_profit', 0.01, 0.15)
+    capital_pct_exp = trial.suggest_float('capital_pct_exp', 0.01, 0.20)
 
     # RSI
-    rsi_window = trail.suggest_int('rsi_window', 5, 60)
-    rsi_lower = trail.suggest_int('rsi_lower', 5, 35)
-    rsi_upper = trail.suggest_int('rsi_upper', 60, 95)
+    rsi_window = trial.suggest_int('rsi_window', 5, 60)
+    rsi_lower = trial.suggest_int('rsi_lower', 5, 35)
+    rsi_upper = trial.suggest_int('rsi_upper', 60, 95)
     rsi_buy, rsi_sell = rsi(data, rsi_window, rsi_lower, rsi_upper)
 
     # MACD
-    macd_fast = trail.suggest_int('macd_fast', 5, 20)
-    macd_slow = trail.suggest_int('macd_slow', 20, 50)
-    macd_signal_param = trail.suggest_int('macd_signal', 5, 20)
+    macd_fast = trial.suggest_int('macd_fast', 5, 20)
+    macd_slow = trial.suggest_int('macd_slow', 20, 50)
+    macd_signal_param = trial.suggest_int('macd_signal', 5, 20)
     macd_buy, macd_sell = macd(data, macd_fast, macd_slow, macd_signal_param)
 
     # Bollinger Bands
-    bb_window = trail.suggest_int('bb_window', 10, 50)
-    bb_window_dev = trail.suggest_float('bb_window_dev', 1.0, 3.0)
+    bb_window = trial.suggest_int('bb_window', 10, 50)
+    bb_window_dev = trial.suggest_float('bb_window_dev', 1.0, 3.0)
     bb_buy, bb_sell = bollinger_bands(data, bb_window, bb_window_dev)
 
     # Buy or sell signals
-    historic = data.copy()
-    historic = historic.dropna()
+    historic = data.copy().dropna()
     buy_signals = rsi_buy.astype(int) + macd_buy.astype(int) + bb_buy.astype(int)
     sell_signals = rsi_sell.astype(int) + macd_sell.astype(int) + bb_sell.astype(int)
 
@@ -54,6 +54,7 @@ def backtest_opt(data, trail) -> float:
     port_value = []
 
     for i, row in historic.iterrows():
+        n_shares = (cash * capital_pct_exp) / row.Close
 
         # Close LONG positions
         for position in active_long_positions.copy():
@@ -98,7 +99,7 @@ def backtest_opt(data, trail) -> float:
             )
 
         
-        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close,n_shares, COM))
+        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close, COM))
 
     # Close Long positions at the end
     for position in active_long_positions:
@@ -126,12 +127,11 @@ def backtest_opt(data, trail) -> float:
 
 
 def backtest_values(data: pd.DataFrame, params: dict) -> float:
-    data = data.copy()
-
+    
     # Params from Optuna
     stop_loss = params["stop_loss"]
     take_profit = params["take_profit"]
-    n_shares = params["n_shares"]
+    capital_pct_exp = params['capital_pct_exp']
 
     rsi_window = params["rsi_window"]
     rsi_lower = params["rsi_lower"]
@@ -150,7 +150,7 @@ def backtest_values(data: pd.DataFrame, params: dict) -> float:
 
     #Sell or buy signals
 
-    historic = data.dropna().copy()
+    historic = data.copy().dropna()
     buy_signals = rsi_buy.astype(int) + macd_buy.astype(int) + bb_buy.astype(int)
     sell_signals = rsi_sell.astype(int) + macd_sell.astype(int) + bb_sell.astype(int)
 
@@ -167,12 +167,20 @@ def backtest_values(data: pd.DataFrame, params: dict) -> float:
 
     port_value = []
 
+    total_trades = 0
+    wins = 0
+
     
     for i, row in historic.iterrows():
-
+        n_shares = (cash * capital_pct_exp) / row.Close
         # Close LONG positions
         for position in active_long_positions.copy():
             if row.Close > position.take_profit or row.Close < position.stop_loss:
+
+                total_trades += 1
+                if row.Close > position.price:
+                    wins += 1
+
                 cash += row.Close * position.n_shares * (1 - COM)
                 active_long_positions.remove(position)
 
@@ -180,6 +188,11 @@ def backtest_values(data: pd.DataFrame, params: dict) -> float:
         for position in active_short_positions.copy():
             if row.Close < position.take_profit or row.Close > position.stop_loss:
                 pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+
+                total_trades += 1
+                if pnl > 0:
+                    wins += 1
+                
                 cash += (position.price * position.n_shares * (1 + COM)) + pnl
                 active_short_positions.remove(position)
 
@@ -213,16 +226,45 @@ def backtest_values(data: pd.DataFrame, params: dict) -> float:
             )
 
         
-        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close,n_shares, COM))
+        port_value.append(get_portfolio_value(cash,active_long_positions,active_short_positions,row.Close,COM))
 
     # Close Long positions at the end
     for position in active_long_positions:
+
+        total_trades += 1
+        if row.Close > position.price:
+            wins += 1
+
         cash += row.Close * position.n_shares * (1 - COM)
 
     # Close Short positions at the end
     for position in active_short_positions:
         pnl = (position.price - row.Close) * position.n_shares * (1 - COM)
+
+        total_trades += 1
+        if pnl > 0:
+            wins += 1
+
         cash += (position.price * position.n_shares * (1 + COM)) + pnl
 
+    active_long_positions = []
+    active_short_positions = []
+
+    win_rate = (wins / total_trades) if total_trades > 0 else 0.0
     
-    return port_value, cash
+    return port_value, cash, win_rate
+
+def walk_forward_analysis(data, trial, n_splits: int):
+    tscv = TimeSeriesSplit(n_splits=n_splits)
+    returns = []
+
+    for train_id, test_idx in tscv.split(data):
+        train_data = data.iloc[train_id]
+        test_data = data.iloc[test_idx]
+
+        score = backtest_opt(test_data, trial)
+        returns.append(score)
+
+    return sum(returns) / len(returns)
+
+
