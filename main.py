@@ -10,8 +10,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tablas import metric_tables
-
 def main():
 
     # Data
@@ -85,6 +83,8 @@ def main():
 
 
     # Plots
+    plot_portfolio_value_train(portfolio_Value_train)
+    plot_test_validation(portfolio_Value_test, portfolio_Value_val, test_split, val_split)
 
     #### FALTAAAAAAAAAAAAA  plots bien, cambiar indicadores y docstrings
 
