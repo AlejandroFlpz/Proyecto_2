@@ -21,4 +21,12 @@ def split_data(data: pd.DataFrame):
 
     return train_data, test_data, val_data
 
+def combine_portfolio_series(test_series, val_series):
+    
+    combined = pd.concat([test_series, val_series])
+    combined = combined[~combined.index.duplicated(keep='first')]
+    combined_portafolio = combined.sort_index()
+
+    return combined_portafolio
+
 

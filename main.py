@@ -1,6 +1,6 @@
 
 from Backtest_real import backtest
-from data_utils import datos, split_data
+from data_utils import datos, split_data, combine_portfolio_series
 from optimize import optimization
 from get_signals import get_signal
 from tablas import metric_tables
@@ -71,11 +71,16 @@ def main():
     print(metric_tables(portafolio_Value_val))
     print("\n")
 
-    # Plots
-    plt.plot(portafolio_Value_test)
-    plt.plot(portafolio_Value_val)
-    plt.show()
+    # Combine test and validation portfolio values
 
+    print("────────────── COMBINED TEST + VALIDATION RESULTS ──────────────")
+
+    portafolio_combined = combine_portfolio_series(portafolio_Value_test, portafolio_Value_val)
+    print(metric_tables(portafolio_combined))
+
+    # Plots
+
+    #### FALTAAAAAAAAAAAAAAAA
 
 if __name__ == "__main__":
     main()
