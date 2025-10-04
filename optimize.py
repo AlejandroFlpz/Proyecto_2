@@ -17,8 +17,8 @@ def optimization(trial, train_data):
     ema_long  = trial.suggest_int('ema_long', 20, 100)
 
     # MACD
-    macd_fast         = trial.suggest_int('macd_fast', 5, 20)
-    macd_slow         = trial.suggest_int('macd_slow', 20, 50)
+    macd_fast = trial.suggest_int('macd_fast', 5, 20)
+    macd_slow  = trial.suggest_int('macd_slow', 20, 50)
     macd_signal_param = trial.suggest_int('macd_signal', 5, 20)
 
     # Params
@@ -53,9 +53,8 @@ def optimization(trial, train_data):
         start_idx = i * size
         end_idx   = (i + 1) * size
         chunk = data.iloc[start_idx:end_idx, :]
-
-        port_vals = backtest(chunk, params['stop_loss'], params['take_profit'], params['n_shares'])
-        calmar    = calmar_ratio(port_vals)
+        port_vals, cash, win_rate_ = backtest(chunk, params)
+        calmar   = calmar_ratio(port_vals)
         calmars.append(calmar)
     
     return np.mean(calmars)

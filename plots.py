@@ -1,37 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def plot_portfolio_value(portfolio_values):
-    """
-    Plot the portfolio value over time.
+def plot_portfolio_value_train(portfolio_value_train):
     
-    Parameters:
-        portfolio_values (list or pd.Series): Portfolio values over time.
-
-    Returns:
-        None
-    """
-    
-    plt.figure(figsize=(12, 6))
-    plt.plot(portfolio_values)
-    plt.title('Portfolio value over time (train)')
+    plt.figure(figsize=(10, 5))
+    plt.plot(portfolio_value_train,  color='cornflowerblue', linewidth=1.8, label='Train Portfolio')
+    plt.title('Portfolio Value over Training Period')
     plt.xlabel('Time')
-    plt.ylabel('Portfolio value')
+    plt.ylabel('Portfolio Value')
+    plt.legend()
     plt.show()
 
-def plot_test_validation(test_portfolio, validation_portfolio, test, validation):
-    """
-    Plot the portfolio value for test and validation sets.
-    
-    Parameters:
-        test_portfolio (list or pd.Series): Portfolio values over time for the test set.
-        validation_portfolio (list or pd.Series): Portfolio values over time for the validation set.
-        test (pd.DataFrame): Test market data with datetime information.
-        validation (pd.DataFrame): Validation market data with datetime information.
 
-    Returns:
-        None
-    """
+def plot_test_validation(test_portfolio, validation_portfolio, test, validation):
     
     test_df = pd.DataFrame({
         'Date': test['Datetime'].reset_index(drop=True),
@@ -51,3 +32,6 @@ def plot_test_validation(test_portfolio, validation_portfolio, test, validation)
     plt.ylabel('Portfolio value')
     plt.legend()
     plt.show()
+
+
+
