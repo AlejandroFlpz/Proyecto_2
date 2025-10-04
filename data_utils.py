@@ -11,7 +11,7 @@ def datos(csv: str) -> pd.DataFrame:
 
     return data
 
-def split_data(data: pd.DataFrame):
+def split_data(data: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     train_size = int(len(data) * 0.6)
     test_size = int(len(data) * 0.2)
 
@@ -22,12 +22,6 @@ def split_data(data: pd.DataFrame):
 
     return train_data, test_data, val_data
 
-def combine_portfolio_series(test_portfolio_value, val_portfolio_value):
 
-    combined = pd.concat([test_portfolio_value, val_portfolio_value])
-    combined = combined[~combined.index.duplicated(keep='first')]
-    combined_portafolio = combined.sort_index()
-
-    return combined_portafolio
 
 

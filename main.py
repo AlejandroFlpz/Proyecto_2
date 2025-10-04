@@ -1,9 +1,9 @@
 
 from Backtest_real import backtest
-from data_utils import datos, split_data, combine_portfolio_series
+from data_utils import datos, split_data
 from optimize import optimization
 from get_signals import get_signal
-from tablas import metric_tables
+from tablas import metrics, returns
 from plots import plot_portfolio_value_train, plot_test_validation
 import optuna
 import pandas as pd
@@ -41,7 +41,7 @@ def main():
     print(f"Portfolio Value Final: {portfolio_Value_train.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_train:,.2f}")
     print(f"Win Rate: {win_rate_train:.2%}")
-    print(metric_tables(portfolio_Value_train))
+    print(metrics(portfolio_Value_train))
     print("\n")
 
     # Test results
@@ -54,7 +54,7 @@ def main():
     print(f"Portfolio Value Final: {portfolio_Value_test.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_test:,.2f}")
     print(f"Win Rate: {win_rate_test:.2%}")
-    print(metric_tables(portfolio_Value_test))
+    print(metrics(portfolio_Value_test))
     print("\n")
 
     # Validation results
@@ -68,19 +68,25 @@ def main():
     print(f"Portfolio Value Final: {portfolio_Value_val.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_val:,.2f}")
     print(f"Win Rate: {win_rate_val:.2%}")
-    print(metric_tables(portfolio_Value_val))
+    print(metrics(portfolio_Value_val))
     print("\n")
 
     # Combine test and validation portfolio values
 
     print("────────────── COMBINED TEST + VALIDATION RESULTS ──────────────")
 
-    portfolio_combined = combine_portfolio_series(portfolio_Value_test, portfolio_Value_val)
-    print(metric_tables(portfolio_combined))
+    total_portfolio, port_val_through_time = returns(portfolio_Value_test, portfolio_Value_val, test_split, val_split)
+
+    print("Performance metrics:")
+    print(metrics(pd.Series(total_portfolio)))
+
+    print("Returns table:")
+    print(port_val_through_time)
+
 
     # Plots
 
-    #### FALTAAAAAAAAAAAAA Tabla metricas anuales, plots bien, cambiar indicadores y docstrings
+    #### FALTAAAAAAAAAAAAA  plots bien, cambiar indicadores y docstrings
 
 if __name__ == "__main__":
     main()

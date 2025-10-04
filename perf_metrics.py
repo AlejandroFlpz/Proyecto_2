@@ -4,8 +4,9 @@ import numpy as np
 
 
 def ratio_de_sharpe(port_value) -> float:
-    ret_mean = port_value.pct_change().dropna().mean()
-    ret_std = port_value.pct_change().dropna().std()
+
+    ret_mean = port_value.pct_change(fill_method=None).dropna().mean()
+    ret_std = port_value.pct_change(fill_method=None).dropna().std()
 
     annual_mean = ret_mean * (365*24)
     annual_std = ret_std * np.sqrt(365*24)
@@ -23,7 +24,7 @@ def max_drawdown(port_value) -> float:
     return abs(max_drawdwn)
 
 def sortino_ratio(port_value: pd.Series) -> float:
-    ret = port_value.pct_change().dropna()
+    ret = port_value.pct_change(fill_method=None).dropna()
     ret_mean = ret.mean()
     downside_vol = np.minimum(ret, 0).std()
 
@@ -38,7 +39,7 @@ def sortino_ratio(port_value: pd.Series) -> float:
     return sortino
 
 def calmar_ratio(port_value) -> float:
-    ret_mean = port_value.pct_change().dropna().mean()
+    ret_mean = port_value.pct_change(fill_method=None).dropna().mean()
     annual_mean = ret_mean * (365*24)
     max_drawd = max_drawdown(port_value)
 
