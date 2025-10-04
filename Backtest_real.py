@@ -5,6 +5,7 @@ import pandas as pd
 
 def backtest(data, SL, TP, n_shares) -> pd.Series:
     data = data.copy()
+    
     COM = 0.125 / 100
     stop_Loss = SL
     take_Profit = TP

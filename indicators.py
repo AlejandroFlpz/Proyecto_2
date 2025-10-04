@@ -1,44 +1,45 @@
 import pandas as pd
 import ta
 
-def rsi(data: pd.DataFrame, rsi_window: int, rsi_lower: int, rsi_upper: int) -> tuple:
+def rsi_signals(data: pd.DataFrame, rsi_window: int, rsi_lower: int, rsi_upper: int):
     rsi_indicator = ta.momentum.RSIIndicator(data.Close, window=rsi_window)
-    rsi_ind = rsi_indicator.rsi()
+    rsi = rsi_indicator.rsi()
 
-    buy_signal_rsi = rsi_ind < rsi_lower
-    sell_signal_rsi = rsi_ind > rsi_upper
+    # Fijo
+    buy_signal = rsi < rsi_lower
+    sell_signal = rsi > rsi_upper
 
-    #buy_signal_rsi = (rsi_ind < rsi_lower) & (rsi_ind.shift(1) >= rsi_lower)
-    #sell_signal_rsi = (rsi_ind > rsi_upper) & (rsi_ind.shift(1) <= rsi_upper)
+    # Cruce
+    #buy_signal = (rsi < rsi_lower) & (rsi.shift(1) >= rsi_lower)
+    #sell_signal = (rsi > rsi_upper) & (rsi.shift(1) <= rsi_upper)
 
-    return buy_signal_rsi, sell_signal_rsi
+    return buy_signal, sell_signal
 
+def ema_signals(data: pd.DataFrame, short_window: int, long_window: int):
+    short_ema = ta.trend.EMAIndicator(data.Close, window=short_window).ema_indicator()
+    long_ema = ta.trend.EMAIndicator(data.Close, window=long_window).ema_indicator()
 
-def macd(data: pd.DataFrame, fast: int, slow: int, signal: int) -> tuple:
-    macd_indicator = ta.trend.MACD(data.Close, window_slow=slow, window_fast=fast, window_sign=signal)
-    Macd = macd_indicator.macd()
-    macd_signal = macd_indicator.macd_signal()
+    # Fijo
+    buy_signal = short_ema > long_ema
+    sell_signal = short_ema < long_ema
 
-    buy_signal_macd = Macd > macd_signal
-    sell_signal_macd = Macd < macd_signal
+    # Cruce
+    #buy_signal = (short_ema > long_ema) & (short_ema.shift(1) <= long_ema.shift(1))
+    #sell_signal = (short_ema < long_ema) & (short_ema.shift(1) >= long_ema.shift(1))
 
-    #buy_signal_macd = (Macd > macd_signal) & (Macd.shift(1) <= macd_signal.shift(1))
-    #sell_signal_macd = (Macd < macd_signal) & (Macd.shift(1) >= macd_signal.shift(1))
+    return buy_signal, sell_signal
 
-    return buy_signal_macd, sell_signal_macd
+def macd_signals(data: pd.DataFrame, short_window: int, long_window: int, signal_window: int):
+    macd = ta.trend.MACD(data.Close, window_slow=long_window, window_fast=short_window, window_sign=signal_window)
+    macd_line = macd.macd()
+    signal_line = macd.macd_signal()
 
+    # Fijo
+    buy_signal = macd_line > signal_line
+    sell_signal = macd_line < signal_line
 
-def bollinger_bands(data: pd.DataFrame, window: int, window_dev: float) -> tuple:
-    bb_indicator = ta.volatility.BollingerBands(data.Close, window=window, window_dev=window_dev)
-    bb_high = bb_indicator.bollinger_hband()
-    bb_low = bb_indicator.bollinger_lband()
-    
+    # Cruce
+    #buy_signal = (macd_line > signal_line) & (macd_line.shift(1) <= signal_line.shift(1))
+    #sell_signal = (macd_line < signal_line) & (macd_line.shift(1) >= signal_line.shift(1))
 
-    buy_signal_bb = data.Close < bb_low
-    sell_signal_bb = data.Close > bb_high
-
-    #buy_signal_bb = (data.Close < bb_low) & (data.Close.shift(1) >= bb_low.shift(1))
-    #sell_signal_bb = (data.Close > bb_high) & (data.Close.shift(1) <= bb_high.shift(1))
-
-    return buy_signal_bb, sell_signal_bb
-
+    return buy_signal, sell_signal
