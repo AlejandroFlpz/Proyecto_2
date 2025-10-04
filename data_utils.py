@@ -2,6 +2,7 @@ import pandas as pd
 
 
 def datos(csv: str) -> pd.DataFrame:
+    
     data = pd.read_csv(csv).dropna()
     data = data.copy()
     data = data.rename(columns={'Date': 'Datetime'})
@@ -21,9 +22,9 @@ def split_data(data: pd.DataFrame):
 
     return train_data, test_data, val_data
 
-def combine_portfolio_series(test_series, val_series):
-    
-    combined = pd.concat([test_series, val_series])
+def combine_portfolio_series(test_portfolio_value, val_portfolio_value):
+
+    combined = pd.concat([test_portfolio_value, val_portfolio_value])
     combined = combined[~combined.index.duplicated(keep='first')]
     combined_portafolio = combined.sort_index()
 

@@ -36,12 +36,12 @@ def main():
     print("────────────── TRAIN RESULTS ──────────────")
 
     train_data = get_signal(train_split.copy(), study.best_params)
-    portafolio_Value_train, cash_train, win_rate_train = backtest(train_data, cash=1_000_000, params=study.best_params)
+    portfolio_Value_train, cash_train, win_rate_train = backtest(train_data, cash=1_000_000, params=study.best_params)
 
-    print(f"Portfolio Value Final: {portafolio_Value_train.iloc[-1]:,.2f}")
+    print(f"Portfolio Value Final: {portfolio_Value_train.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_train:,.2f}")
     print(f"Win Rate: {win_rate_train:.2%}")
-    print(metric_tables(portafolio_Value_train))    
+    print(metric_tables(portfolio_Value_train))
     print("\n")
 
     # Test results
@@ -49,12 +49,12 @@ def main():
     print("────────────── TEST RESULTS ──────────────")
 
     test_data = get_signal(test_split.copy(), study.best_params)
-    portafolio_Value_test, cash_test, win_rate_test = backtest(test_data, cash=1_000_000, params=study.best_params)
+    portfolio_Value_test, cash_test, win_rate_test = backtest(test_data, cash=1_000_000, params=study.best_params)
 
-    print(f"Portfolio Value Final: {portafolio_Value_test.iloc[-1]:,.2f}")
+    print(f"Portfolio Value Final: {portfolio_Value_test.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_test:,.2f}")
     print(f"Win Rate: {win_rate_test:.2%}")
-    print(metric_tables(portafolio_Value_test))
+    print(metric_tables(portfolio_Value_test))
     print("\n")
 
     # Validation results
@@ -62,25 +62,25 @@ def main():
     print("────────────── VALIDATION RESULTS ──────────────")
 
     val_data = get_signal(val_split.copy(), study.best_params)
-    portafolio_Value_val, cash_val, win_rate_val = backtest(val_data, cash=cash_test, params=study.best_params)
+    portfolio_Value_val, cash_val, win_rate_val = backtest(val_data, cash=cash_test, params=study.best_params)
 
-    print(f"Portfolio Value inicial: {portafolio_Value_val.iloc[0]:,.2f}")
-    print(f"Portfolio Value Final: {portafolio_Value_val.iloc[-1]:,.2f}")
+    print(f"Portfolio Value inicial: {portfolio_Value_val.iloc[0]:,.2f}")
+    print(f"Portfolio Value Final: {portfolio_Value_val.iloc[-1]:,.2f}")
     print(f"Cash Final: {cash_val:,.2f}")
     print(f"Win Rate: {win_rate_val:.2%}")
-    print(metric_tables(portafolio_Value_val))
+    print(metric_tables(portfolio_Value_val))
     print("\n")
 
     # Combine test and validation portfolio values
 
     print("────────────── COMBINED TEST + VALIDATION RESULTS ──────────────")
 
-    portafolio_combined = combine_portfolio_series(portafolio_Value_test, portafolio_Value_val)
-    print(metric_tables(portafolio_combined))
+    portfolio_combined = combine_portfolio_series(portfolio_Value_test, portfolio_Value_val)
+    print(metric_tables(portfolio_combined))
 
     # Plots
 
-    #### FALTAAAAAAAAAAAAAAAA
+    #### FALTAAAAAAAAAAAAA Tabla metricas anuales, plots bien, cambiar indicadores y docstrings
 
 if __name__ == "__main__":
     main()
