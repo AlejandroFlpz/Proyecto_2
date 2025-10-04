@@ -53,7 +53,7 @@ def optimization(trial, train_data):
         start_idx = i * size
         end_idx   = (i + 1) * size
         chunk = data.iloc[start_idx:end_idx, :]
-        port_vals, cash, win_rate_ = backtest(chunk, params)
+        port_vals, cash_val, win_rate_ = backtest(chunk, cash=1_000_000, params=params)
         calmar   = calmar_ratio(port_vals)
         calmars.append(calmar)
     

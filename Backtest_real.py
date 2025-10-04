@@ -3,14 +3,14 @@ from models import Operation
 from port_value import get_portfolio_value
 import pandas as pd
 
-def backtest(data, params:dict) -> tuple[pd.Series, float, float]:
+def backtest(data,cash: float, params:dict) -> tuple[pd.Series, float, float]:
     data = data.copy()
     
     COM = 0.125 / 100
     stop_Loss = params['stop_loss']
     take_Profit = params['take_profit']
     n_shares = params['n_shares']
-    cash = 1_000_000
+
 
     active_long_positions: list[Operation] = []
     active_short_positions: list[Operation] = []
