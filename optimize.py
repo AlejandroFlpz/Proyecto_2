@@ -12,29 +12,47 @@ def optimization(trial, train_data):
     rsi_lower  = trial.suggest_int('rsi_lower', 5, 35)
     rsi_upper  = trial.suggest_int('rsi_upper', 60, 95)
 
+     # MACD
+    macd_fast = trial.suggest_int('macd_fast', 5, 20)
+    macd_slow  = trial.suggest_int('macd_slow', 20, 50)
+    macd_signal_param = trial.suggest_int('macd_signal', 5, 20)
+
     # EMA
     ema_short = trial.suggest_int('ema_short', 5, 20)
     ema_long  = trial.suggest_int('ema_long', 20, 100)
 
-    # MACD
-    macd_fast = trial.suggest_int('macd_fast', 5, 20)
-    macd_slow  = trial.suggest_int('macd_slow', 20, 50)
-    macd_signal_param = trial.suggest_int('macd_signal', 5, 20)
+    # Bandas de Bollinger
+    bb_window = trial.suggest_int('bb_window', 10, 60)
+    bb_std = trial.suggest_float('bb_std', 1.0, 2.0)
+
+    # Estocástico
+    stoch_k_window = trial.suggest_int('stoch_k_window', 5, 20)
+    stoch_d_window = trial.suggest_int('stoch_d_window', 3, 10)
+    stoch_lower = trial.suggest_int('stoch_lower', 0, 20)
+    stoch_upper = trial.suggest_int('stoch_upper', 80, 100)
 
     # Params
     stop_loss   = trial.suggest_float('stop_loss', 0.01, 0.12)
     take_profit = trial.suggest_float('take_profit', 0.01, 0.15)
     n_shares    = trial.suggest_float('n_shares', 0.01, 5)
 
+
+
     params = {
         'rsi_window': rsi_window,
         'rsi_lower': rsi_lower,
         'rsi_upper': rsi_upper,
-        'ema_short': ema_short,
-        'ema_long': ema_long,
         'macd_fast': macd_fast,
         'macd_slow': macd_slow,
         'macd_signal': macd_signal_param,
+        'ema_short': ema_short,
+        'ema_long': ema_long,
+        'bb_window': bb_window,
+        'bb_std': bb_std,
+        'stoch_k_window': stoch_k_window,
+        'stoch_d_window': stoch_d_window,
+        'stoch_lower': stoch_lower,
+        'stoch_upper': stoch_upper,
         'stop_loss': stop_loss,
         'take_profit': take_profit,
         'n_shares': n_shares

@@ -77,16 +77,20 @@ def main():
 
     print("Performance metrics:")
     print(metrics(pd.Series(total_portfolio)))
+    print("\n")
 
     print("Returns table:")
     print(port_val_through_time)
+    print("\n")
 
+
+    print(len(portfolio_Value_train), len(portfolio_Value_test), len(portfolio_Value_val))
 
     # Plots
     plot_portfolio_value_train(portfolio_Value_train)
     plot_test_validation(portfolio_Value_test, portfolio_Value_val, test_split, val_split)
 
-    #### FALTAAAAAAAAAAAAA  plots bien, cambiar indicadores y docstrings
+   
 
 if __name__ == "__main__":
     main()

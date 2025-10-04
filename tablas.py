@@ -16,7 +16,7 @@ def returns(portfolio_Value_test, portfolio_Value_val, test_split, val_split) ->
     test_validation = pd.concat([test_split, val_split]).reset_index(drop=True)
     total_portfolio = portfolio_Value_test + portfolio_Value_val
 
-   
+
     dates = test_validation['Datetime'].tail(len(total_portfolio)).reset_index(drop=True)
     port_val_idx_dates = pd.DataFrame({
         'Datetime': dates,
